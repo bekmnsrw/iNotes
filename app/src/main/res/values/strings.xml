@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">iNotes</string>
+
+    <!--  NotesListScreen  -->
+    <string name="title_first_line">your</string>
+    <string name="title_second_line">notes</string>
+    <string name="pinned_notes">pinned</string>
+    <string name="other_notes">other</string>
 </resources>
