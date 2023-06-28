@@ -6,4 +6,8 @@
     <string name="title_second_line">notes</string>
     <string name="pinned_notes">pinned</string>
     <string name="other_notes">other</string>
+
+    <!--  NoteDetails  -->
+    <string name="note_title">Title</string>
+    <string name="note_content">Start typing…</string>
 </resources>

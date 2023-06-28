@@ -51,14 +51,7 @@ fun NavigationHost(
             composable(BottomNavigationItem.ToDoList.route) { ToDoListScreen() }
             composable(BottomNavigationItem.Settings.route) { SettingsScreen() }
 
-            composable(Screen.NoteDetails.route) {
-                it.arguments?.getString("noteId")?.let { id ->
-                    NoteDetailsScreen(
-                        navController = navHostController,
-                        noteId = id.toLong()
-                    )
-                }
-            }
+            composable(Screen.NoteDetails.route) { NoteDetailsScreen(navController = navHostController) }
         }
     }
 }

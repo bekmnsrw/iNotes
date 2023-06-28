@@ -37,15 +37,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekmnsrw.inotes.R
 import com.bekmnsrw.inotes.core.navigation.Screen
-import com.bekmnsrw.inotes.feature.notes.domain.Note
-import com.bekmnsrw.inotes.feature.notes.domain.Tag
+import com.bekmnsrw.inotes.feature.notes.domain.dto.NoteDto
+import com.bekmnsrw.inotes.feature.notes.domain.dto.TagDto
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.*
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.*
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.*
+import com.bekmnsrw.inotes.feature.notes.util.formatLastModified
+import com.bekmnsrw.inotes.feature.notes.util.rememberLifecycleEvent
 import com.bekmnsrw.inotes.ui.custom.CustomTheme
 import com.bekmnsrw.inotes.ui.custom.Theme
 import kotlinx.collections.immutable.PersistentList
@@ -87,10 +90,21 @@ fun NotesListContent(
     screenState: NotesListScreenState,
     eventHandler: (NotesListScreenEvent) -> Unit
 ) {
+    val lifecycleOwner = rememberLifecycleEvent()
+
+    LaunchedEffect(lifecycleOwner) {
+        if (lifecycleOwner == Lifecycle.Event.ON_RESUME) {
+            eventHandler(LoadNotes)
+            eventHandler(LoadTags)
+        }
+    }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { eventHandler.invoke(OnButtonAddClicked(0)) }
+                onClick = {
+                    eventHandler(OnButtonAddClicked(0))
+                }
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Add,
@@ -106,21 +120,15 @@ fun NotesListContent(
         ) {
             Column {
                 HeadingContent(
-                    notesCount = 15
+                    notesCount = screenState.notes.size
                 )
                 TagsList(
                     selectedTagId = screenState.selectedTagId,
-                    tags = persistentListOf(
-                        Tag(1, "all"),
-                        Tag(2, "personal"),
-                        Tag(3, "work"),
-                        Tag(4, "home"),
-                        Tag(5, "study"),
-                    ),
+                    tagDtoList = screenState.tags,
                     eventHandler = eventHandler
                 )
                 NotesList(
-                    notes = persistentListOf(),
+                    noteDtoList = screenState.notes,
                     eventHandler = eventHandler
                 )
             }
@@ -136,9 +144,11 @@ fun NotesListActions(
     LaunchedEffect(screenAction) {
         when (screenAction) {
             null -> Unit
-            is NavigateNoteDetails -> navController.navigate(
-                Screen.NoteDetails.createRoute(screenAction.noteId)
-            )
+            is NavigateNoteDetails -> {
+                navController.navigate(
+                    Screen.NoteDetails.createRoute(screenAction.noteId)
+                )
+            }
         }
     }
 }
@@ -182,7 +192,7 @@ fun HeadingContent(
 @Composable
 fun TagsList(
     selectedTagId: Long,
-    tags: PersistentList<Tag>,
+    tagDtoList: PersistentList<TagDto>,
     eventHandler: (NotesListScreenEvent) -> Unit
 ) {
     LazyRow(
@@ -191,14 +201,14 @@ fun TagsList(
         modifier = Modifier.padding(vertical = 16.dp)
     ) {
         items(
-            items = tags,
+            items = tagDtoList,
             key = { it.id }
         ) {
             TagsListItem(
-                tag = it,
+                tagDto = it,
                 isSelected = it.id == selectedTagId
             ) { tagId ->
-                eventHandler.invoke(OnTagClicked(tagId))
+                eventHandler(OnTagClicked(tagId))
             }
         }
     }
@@ -207,7 +217,7 @@ fun TagsList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagsListItem(
-    tag: Tag,
+    tagDto: TagDto,
     isSelected: Boolean,
     onClick: (Long) -> Unit
 ) {
@@ -227,10 +237,10 @@ fun TagsListItem(
                 false -> CustomTheme.colors.onBackground
             }
         ),
-        onClick = { onClick(tag.id) }
+        onClick = { onClick(tagDto.id) }
     ) {
         Text(
-            text = "#${tag.name}",
+            text = tagDto.name,
             color = when (isSelected) {
                 true -> CustomTheme.colors.onPrimary
                 false -> CustomTheme.colors.onBackground
@@ -244,7 +254,7 @@ fun TagsListItem(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NotesList(
-    notes: PersistentList<Note>,
+    noteDtoList: PersistentList<NoteDto>,
     eventHandler: (NotesListScreenEvent) -> Unit
 ) {
     LazyVerticalStaggeredGrid(
@@ -259,9 +269,9 @@ fun NotesList(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(vertical = 16.dp),
         content = {
-            items(notes) {
-                NoteListItem(note = it) { noteId ->
-                    eventHandler.invoke(OnNoteClicked(noteId))
+            items(noteDtoList) {
+                NoteListItem(noteDto = it) { noteId ->
+                    eventHandler(OnNoteClicked(noteId))
                 }
             }
         }
@@ -271,36 +281,39 @@ fun NotesList(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteListItem(
-    note: Note,
+    noteDto: NoteDto,
     onClick: (Long) -> Unit
 ) {
     Card(
-        onClick = { onClick(note.id) }
+        onClick = { onClick(noteDto.id) }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            Text(
-                text = note.title,
-                color = CustomTheme.colors.onBackground,
-                style = CustomTheme.typography.cardTitle,
-                modifier = Modifier
-                    .fillMaxWidth(),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = note.content,
-                color = CustomTheme.colors.onBackground,
-                style = CustomTheme.typography.cardContent,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
+            if (!noteDto.title.isNullOrBlank()) {
+                Text(
+                    text = noteDto.title,
+                    color = CustomTheme.colors.onBackground,
+                    style = CustomTheme.typography.cardTitle,
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (noteDto.content.isNotBlank()) {
+                Text(
+                    text = noteDto.content,
+                    color = CustomTheme.colors.onBackground,
+                    style = CustomTheme.typography.cardContent,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
             Row(
                 modifier = Modifier.fillMaxSize(),
                 verticalAlignment = Alignment.CenterVertically
@@ -316,7 +329,7 @@ fun NoteListItem(
                     )
                 ) {
                     Text(
-                        text = "Today, 4:30",
+                        text = formatLastModified(noteDto.lastModified),
                         color = CustomTheme.colors.outline,
                         style = CustomTheme.typography.cardDate,
                         modifier = Modifier.padding(8.dp)
@@ -326,7 +339,7 @@ fun NoteListItem(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (note.isPinned) {
+                    if (noteDto.isPinned) {
                         Icon(
                             imageVector = Icons.Rounded.PushPin,
                             contentDescription = null,
