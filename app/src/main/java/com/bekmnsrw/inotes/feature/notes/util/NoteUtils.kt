@@ -1,5 +1,6 @@
 package com.bekmnsrw.inotes.feature.notes.util
 
+import android.annotation.SuppressLint
 import android.text.format.DateUtils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -25,17 +26,25 @@ fun rememberLifecycleEvent(lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.
     return state
 }
 
-fun getCurrentTime(): String = SimpleDateFormat("EEEE, d MMMM yyyy, HH:mm").format(Calendar.getInstance().time)
+fun getCurrentDateTimeInMilliseconds(): Long = System.currentTimeMillis()
 
-fun formatLastModified(lastModified: String): String {
-    val fullDate = lastModified.split(", ")
-    val date = fullDate[1].split(" ")
-    val calendar = Calendar.getInstance()
+@SuppressLint("SimpleDateFormat")
+fun formatLastModifiedInNotesList(lastModified: Long): String {
+    val dateTime = SimpleDateFormat("EEEE, d MMMM yyyy, HH:mm").format(lastModified)
+    val fullDate = dateTime.split(", ")[1]
+    val time = dateTime.split(", ")[2]
+    val date = "${fullDate.split(" ")[0]} ${fullDate.split(" ")[1]}"
+    val year = fullDate.split(" ")[2]
 
     return when {
-        DateUtils.isToday(calendar.time.time + DateUtils.DAY_IN_MILLIS) -> "Yesterday ${fullDate[2]}"
-        DateUtils.isToday(calendar.time.time) -> fullDate[2]
-        calendar.get(Calendar.YEAR).toString() == date[2] -> "${date[0]} ${date[1]}"
-        else -> "${date[0]} ${date[1]} ${date[2]}"
+        DateUtils.isToday(lastModified + DateUtils.DAY_IN_MILLIS) -> "Yesterday $time"
+        DateUtils.isToday(lastModified) -> time
+        Calendar.getInstance().get(Calendar.YEAR).toString() == year -> date
+        else -> fullDate
     }
 }
+
+@SuppressLint("SimpleDateFormat")
+fun formatLastModifiedInNoteDetails(
+    lastModified: Long
+): String = SimpleDateFormat("EEEE, d MMMM yyyy, HH:mm").format(lastModified)

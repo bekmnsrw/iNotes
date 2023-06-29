@@ -15,7 +15,7 @@ data class Note(
     val content: String,
 
     @ColumnInfo(name = "last_modified")
-    val lastModified: String,
+    val lastModified: Long,
 
     @ColumnInfo(
         name = "is_pinned",

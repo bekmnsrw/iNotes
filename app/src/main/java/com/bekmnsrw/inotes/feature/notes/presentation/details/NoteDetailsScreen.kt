@@ -43,6 +43,7 @@ import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewMod
 import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewModel.NoteDetailsScreenEvent
 import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewModel.NoteDetailsScreenEvent.*
 import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewModel.NoteDetailsScreenState
+import com.bekmnsrw.inotes.feature.notes.util.formatLastModifiedInNoteDetails
 import com.bekmnsrw.inotes.ui.custom.CustomTheme
 import com.bekmnsrw.inotes.ui.custom.Theme
 
@@ -217,11 +218,13 @@ fun NoteHeader(
                 }
             )
         }
-        Text(
-            text = note.lastModified,
-            color = CustomTheme.colors.outline,
-            style = CustomTheme.typography.cardDate
-        )
+        if (note.lastModified != 0L) {
+            Text(
+                text = formatLastModifiedInNoteDetails(note.lastModified),
+                color = CustomTheme.colors.outline,
+                style = CustomTheme.typography.cardDate
+            )
+        }
     }
 }
 

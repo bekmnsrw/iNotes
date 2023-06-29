@@ -26,7 +26,7 @@ interface NoteDao {
         id: Long,
         title: String?,
         content: String,
-        lastModified: String,
+        lastModified: Long,
         isPinned: Boolean,
         cardColor: CardColor,
         tagId: Long

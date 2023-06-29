@@ -18,7 +18,7 @@ import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewMod
 import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewModel.NoteDetailsScreenEvent.OnNoteContentChange
 import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewModel.NoteDetailsScreenEvent.OnNoteTitleChange
 import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewModel.NoteDetailsScreenEvent.OnUserStartTyping
-import com.bekmnsrw.inotes.feature.notes.util.getCurrentTime
+import com.bekmnsrw.inotes.feature.notes.util.getCurrentDateTimeInMilliseconds
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -91,7 +91,7 @@ class NoteDetailsViewModel @Inject constructor(
                 _screenState.emit(
                     _screenState.value.copy(
                         note = _screenState.value.note.copy(
-                            lastModified = getCurrentTime()
+                            lastModified = getCurrentDateTimeInMilliseconds()
                         )
                     )
                 )
@@ -172,7 +172,7 @@ class NoteDetailsViewModel @Inject constructor(
         _screenState.emit(
             _screenState.value.copy(
                 note = _screenState.value.note.copy(
-                    lastModified = getCurrentTime()
+                    lastModified = getCurrentDateTimeInMilliseconds()
                 )
             )
         )
@@ -189,7 +189,7 @@ class NoteDetailsViewModel @Inject constructor(
             title = "",
             content = "",
             isPinned = false,
-            lastModified = "",
+            lastModified = 0,
             cardColor = CardColor.BASE,
             tagId = 1L
         ),

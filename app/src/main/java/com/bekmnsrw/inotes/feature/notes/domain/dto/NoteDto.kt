@@ -5,7 +5,7 @@ data class NoteDto(
     val title: String?,
     val content: String,
     val isPinned: Boolean,
-    val lastModified: String,
+    val lastModified: Long,
     val cardColor: CardColor,
     val tagId: Long
 )

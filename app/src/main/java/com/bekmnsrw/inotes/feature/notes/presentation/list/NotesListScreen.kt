@@ -47,12 +47,11 @@ import com.bekmnsrw.inotes.feature.notes.domain.dto.TagDto
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.*
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.*
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.*
-import com.bekmnsrw.inotes.feature.notes.util.formatLastModified
+import com.bekmnsrw.inotes.feature.notes.util.formatLastModifiedInNotesList
 import com.bekmnsrw.inotes.feature.notes.util.rememberLifecycleEvent
 import com.bekmnsrw.inotes.ui.custom.CustomTheme
 import com.bekmnsrw.inotes.ui.custom.Theme
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
 
 @Preview(showBackground = true)
 @Composable
@@ -329,7 +328,7 @@ fun NoteListItem(
                     )
                 ) {
                     Text(
-                        text = formatLastModified(noteDto.lastModified),
+                        text = formatLastModifiedInNotesList(noteDto.lastModified),
                         color = CustomTheme.colors.outline,
                         style = CustomTheme.typography.cardDate,
                         modifier = Modifier.padding(8.dp)
