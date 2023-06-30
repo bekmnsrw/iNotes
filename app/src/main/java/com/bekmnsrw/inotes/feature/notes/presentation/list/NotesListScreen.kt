@@ -2,6 +2,7 @@ package com.bekmnsrw.inotes.feature.notes.presentation.list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekmnsrw.inotes.R
 import com.bekmnsrw.inotes.core.navigation.Screen
+import com.bekmnsrw.inotes.feature.notes.domain.dto.CardColor
 import com.bekmnsrw.inotes.feature.notes.domain.dto.NoteDto
 import com.bekmnsrw.inotes.feature.notes.domain.dto.TagDto
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.*
@@ -115,6 +117,7 @@ fun NotesListContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(CustomTheme.colors.background)
                 .padding(contentPadding)
         ) {
             Column {
@@ -176,8 +179,7 @@ fun HeadingContent(
             Text(
                 text = stringResource(id = R.string.title_second_line),
                 color = CustomTheme.colors.onBackground,
-                style = CustomTheme.typography.screenHeading,
-                modifier = Modifier.padding(start = 32.dp)
+                style = CustomTheme.typography.screenHeading
             )
             Text(
                 text = "/$notesCount",
@@ -245,7 +247,7 @@ fun TagsListItem(
                 false -> CustomTheme.colors.onBackground
             },
             style = CustomTheme.typography.tag,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(12.dp)
         )
     }
 }
@@ -284,7 +286,16 @@ fun NoteListItem(
     onClick: (Long) -> Unit
 ) {
     Card(
-        onClick = { onClick(noteDto.id) }
+        onClick = { onClick(noteDto.id) },
+        colors = CardDefaults.cardColors(
+            containerColor = when (noteDto.cardColor) {
+                CardColor.BASE -> CustomTheme.colors.baseCardColor
+                CardColor.BLUE -> CustomTheme.colors.blueCardColor
+            }
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        )
     ) {
         Column(
             modifier = Modifier
@@ -325,6 +336,12 @@ fun NoteListItem(
                     border = BorderStroke(
                         width = 1.dp,
                         color = CustomTheme.colors.outline
+                    ),
+                    colors = CardDefaults.cardColors(
+                        containerColor = when (noteDto.cardColor) {
+                            CardColor.BASE -> CustomTheme.colors.baseCardColor
+                            CardColor.BLUE -> CustomTheme.colors.blueCardColor
+                        }
                     )
                 ) {
                     Text(

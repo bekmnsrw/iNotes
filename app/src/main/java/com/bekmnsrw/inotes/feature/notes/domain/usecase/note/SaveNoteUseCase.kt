@@ -11,5 +11,5 @@ class SaveNoteUseCase @Inject constructor(
 
     suspend operator fun invoke(
         note: NoteDto
-    ): Flow<Unit> = noteRepository.save(note)
+    ): Flow<Long> = noteRepository.save(noteDto = note)
 }

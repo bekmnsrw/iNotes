@@ -2,7 +2,7 @@
     <string name="app_name">iNotes</string>
 
     <!--  NotesListScreen  -->
-    <string name="title_first_line">your</string>
+    <string name="title_first_line">my</string>
     <string name="title_second_line">notes</string>
     <string name="pinned_notes">pinned</string>
     <string name="other_notes">other</string>
@@ -10,4 +10,5 @@
     <!--  NoteDetails  -->
     <string name="note_title">Title</string>
     <string name="note_content">Start typing…</string>
+    <string name="card_color_bottom_sheet_title">Choose note color</string>
 </resources>

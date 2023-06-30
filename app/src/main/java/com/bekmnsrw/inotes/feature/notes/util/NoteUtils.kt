@@ -37,8 +37,8 @@ fun formatLastModifiedInNotesList(lastModified: Long): String {
     val year = fullDate.split(" ")[2]
 
     return when {
-        DateUtils.isToday(lastModified + DateUtils.DAY_IN_MILLIS) -> "Yesterday $time"
-        DateUtils.isToday(lastModified) -> time
+        DateUtils.isToday(lastModified + DateUtils.DAY_IN_MILLIS) -> "Yesterday, $time"
+        DateUtils.isToday(lastModified) -> "Today, $time"
         Calendar.getInstance().get(Calendar.YEAR).toString() == year -> date
         else -> fullDate
     }

@@ -12,7 +12,9 @@ data class Colors(
     val onPrimary: Color,
     val surface: Color,
     val onSurface: Color,
-    val outline: Color
+    val outline: Color,
+    val baseCardColor: Color,
+    val blueCardColor: Color
 )
 
 data class Typography(

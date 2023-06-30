@@ -11,26 +11,13 @@ import com.bekmnsrw.inotes.feature.notes.domain.dto.CardColor
 interface NoteDao {
 
     @Insert(onConflict = REPLACE)
-    suspend fun save(note: Note)
+    suspend fun save(note: Note): Long
 
-    @Query("UPDATE note SET " +
-            "title = :title, " +
-            "content = :content, " +
-            "last_modified = :lastModified, " +
-            "is_pinned = :isPinned, " +
-            "card_color = :cardColor," +
-            "tag_id = :tagId " +
-            "WHERE id = :id"
-    )
-    suspend fun update(
-        id: Long,
-        title: String?,
-        content: String,
-        lastModified: Long,
-        isPinned: Boolean,
-        cardColor: CardColor,
-        tagId: Long
-    )
+    @Query("UPDATE note SET is_pinned = :isPinned WHERE id = :id")
+    suspend fun updateIsPinned(id: Long, isPinned: Boolean)
+
+    @Query("UPDATE note SET card_color = :cardColor WHERE id = :id")
+    suspend fun updateCardColor(id: Long, cardColor: CardColor)
 
     @Query("DELETE FROM note WHERE id = :id")
     suspend fun deleteById(id: Long)
