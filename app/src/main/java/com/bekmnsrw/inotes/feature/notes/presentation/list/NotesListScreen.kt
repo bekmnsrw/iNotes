@@ -38,7 +38,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekmnsrw.inotes.R
@@ -50,7 +49,6 @@ import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.*
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.*
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.*
 import com.bekmnsrw.inotes.feature.notes.util.formatLastModifiedInNotesList
-import com.bekmnsrw.inotes.feature.notes.util.rememberLifecycleEvent
 import com.bekmnsrw.inotes.ui.custom.CustomTheme
 import com.bekmnsrw.inotes.ui.custom.Theme
 import kotlinx.collections.immutable.PersistentList
@@ -91,15 +89,6 @@ fun NotesListContent(
     screenState: NotesListScreenState,
     eventHandler: (NotesListScreenEvent) -> Unit
 ) {
-    val lifecycleOwner = rememberLifecycleEvent()
-
-    LaunchedEffect(lifecycleOwner) {
-        if (lifecycleOwner == Lifecycle.Event.ON_RESUME) {
-            eventHandler(LoadNotes)
-            eventHandler(LoadTags)
-        }
-    }
-
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -270,7 +259,10 @@ fun NotesList(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(vertical = 16.dp),
         content = {
-            items(noteDtoList) {
+            items(
+                noteDtoList,
+                key = {it.id}
+            ) {
                 NoteListItem(noteDto = it) { noteId ->
                     eventHandler(OnNoteClicked(noteId))
                 }

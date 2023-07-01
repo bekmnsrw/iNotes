@@ -1,5 +1,6 @@
 package com.bekmnsrw.inotes.feature.notes.presentation.details
 
+import android.view.Gravity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,8 +27,10 @@ import androidx.compose.material.icons.rounded.Done
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,9 +46,13 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -220,7 +227,7 @@ fun TopBar(
                     HeaderIcon(
                         imageVector = Icons.Rounded.MoreVert,
                         horizontalPadding = 0
-                    ) {}
+                    ) {  }
                 }
             }
         }
@@ -403,9 +410,7 @@ private fun ColorCard(
         },
         elevation = if (isSelected) 0.dp else 8.dp,
         shape = RoundedCornerShape(8.dp),
-        onClick = {
-            eventHandler(OnColorCardClicked(cardColor))
-        }
+        onClick = { eventHandler(OnColorCardClicked(cardColor)) }
     ) {}
 }
 

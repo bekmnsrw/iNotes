@@ -34,18 +34,15 @@ class NotesListViewModel @Inject constructor(
     private val saveTagUseCase: SaveTagUseCase
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG_ALL_NAME = "#all"
+        private const val TAG_ALL_ID = 1L
+    }
+
     init {
-        viewModelScope.launch {
-            checkIfTagExistsUseCase(1)
-                .flowOn(Dispatchers.IO)
-                .collect {
-                    if (!it) {
-                        saveTagUseCase(TagDto(1, "#all"))
-                            .flowOn(Dispatchers.IO)
-                            .collect()
-                    }
-                }
-        }
+        saveAllTagIfNotExists()
+        loadNotes()
+        loadTags()
     }
 
     private val _screenState = MutableStateFlow(NotesListScreenState())
@@ -59,9 +56,19 @@ class NotesListViewModel @Inject constructor(
             is NotesListScreenEvent.OnButtonAddClicked -> navigateNoteDetails(event.noteId)
             is NotesListScreenEvent.OnNoteClicked -> navigateNoteDetails(event.noteId)
             is NotesListScreenEvent.OnTagClicked -> onTagClicked(event.tagId)
-            NotesListScreenEvent.LoadNotes -> loadNotes()
-            NotesListScreenEvent.LoadTags -> loadTags()
         }
+    }
+
+    private fun saveAllTagIfNotExists() = viewModelScope.launch {
+        checkIfTagExistsUseCase(TAG_ALL_ID)
+            .flowOn(Dispatchers.IO)
+            .collect {
+                if (!it) {
+                    saveTagUseCase(TagDto(TAG_ALL_ID, TAG_ALL_NAME))
+                        .flowOn(Dispatchers.IO)
+                        .collect()
+                }
+            }
     }
 
     private fun loadTags() = viewModelScope.launch {
@@ -100,8 +107,6 @@ class NotesListViewModel @Inject constructor(
         data class OnNoteClicked(val noteId: Long) : NotesListScreenEvent
         data class OnButtonAddClicked(val noteId: Long) : NotesListScreenEvent
         data class OnTagClicked(val tagId: Long) : NotesListScreenEvent
-        object LoadNotes : NotesListScreenEvent
-        object LoadTags : NotesListScreenEvent
     }
 
     @Immutable
@@ -109,9 +114,7 @@ class NotesListViewModel @Inject constructor(
         data class NavigateNoteDetails(val noteId: Long) : NotesListScreenAction
     }
 
-    private fun onTagClicked(
-        tagId: Long
-    ) = viewModelScope.launch {
+    private fun onTagClicked(tagId: Long) = viewModelScope.launch {
         _screenState.emit(
             _screenState.value.copy(
                 selectedTagId = tagId
@@ -119,9 +122,7 @@ class NotesListViewModel @Inject constructor(
         )
     }
 
-    private fun navigateNoteDetails(
-        noteId: Long
-    ) = viewModelScope.launch {
+    private fun navigateNoteDetails(noteId: Long) = viewModelScope.launch {
         _screenAction.emit(
             NavigateNoteDetails(noteId)
         )

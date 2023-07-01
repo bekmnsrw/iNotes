@@ -68,7 +68,8 @@ class NoteDetailsViewModel @Inject constructor(
         val isTitleEmpty: Boolean = true,
         val isContentEmpty: Boolean = true,
         val isUserTyping: Boolean = false,
-        val isColorBottomSheetVisible: Boolean = false
+        val isColorBottomSheetVisible: Boolean = false,
+        val isDropdownMenuVisible: Boolean = false
     )
 
     @Immutable

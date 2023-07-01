@@ -8,35 +8,29 @@ import com.bekmnsrw.inotes.feature.notes.domain.NoteRepository
 import com.bekmnsrw.inotes.feature.notes.domain.dto.CardColor
 import com.bekmnsrw.inotes.feature.notes.domain.dto.NoteDto
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class NoteRepositoryImpl @Inject constructor(
     private val appDatabase: AppDatabase
 ) : NoteRepository {
 
-    override suspend fun save(
-        noteDto: NoteDto
-    ): Flow<Long> = flow {
-        emit(
+    override suspend fun save(noteDto: NoteDto): Flow<Long> {
+        return flowOf(
             appDatabase.noteDao()
                 .save(note = noteDto.toNote())
         )
     }
 
-    override suspend fun findAll(): Flow<List<NoteDto>> = flow {
-        emit(
-            appDatabase.noteDao()
-                .findAll()
-                .toNoteDtoList()
-        )
+    override suspend fun findAll(): Flow<List<NoteDto>> {
+        return appDatabase.noteDao()
+            .findAll()
+            .map { it.toNoteDtoList() }
     }
 
-    override suspend fun findById(
-        id: Long
-    ): Flow<NoteDto> = flow {
-        emit(
+    override suspend fun findById(id: Long): Flow<NoteDto> {
+        return flowOf(
             appDatabase.noteDao()
                 .findById(id = id)
                 .toNoteDto()
@@ -59,10 +53,13 @@ class NoteRepositoryImpl @Inject constructor(
     override suspend fun updateCardColor(
         id: Long,
         cardColor: CardColor
-    ): Flow<Unit> = flow {
-        emit(
+    ): Flow<Unit> {
+        return flowOf(
             appDatabase.noteDao()
-                .updateCardColor(id, cardColor)
+                .updateCardColor(
+                    id = id,
+                    cardColor = cardColor
+                )
         )
     }
 }

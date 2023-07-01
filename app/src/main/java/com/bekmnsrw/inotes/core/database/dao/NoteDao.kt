@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
 import com.bekmnsrw.inotes.core.database.entity.Note
 import com.bekmnsrw.inotes.feature.notes.domain.dto.CardColor
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
@@ -26,5 +27,5 @@ interface NoteDao {
     suspend fun findById(id: Long): Note
 
     @Query("SELECT * FROM note ORDER BY is_pinned DESC, last_modified DESC")
-    suspend fun findAll(): List<Note>
+    fun findAll(): Flow<List<Note>>
 }
