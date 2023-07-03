@@ -2,14 +2,11 @@ package com.bekmnsrw.inotes.feature.notes.presentation.list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,7 +30,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -158,21 +154,20 @@ fun NotesListContent(
             }
         }
     ) { contentPadding ->
-        CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(count = 2),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.LightGray)
-                    .padding(contentPadding),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 16.dp
-                ),
-                verticalItemSpacing = 16.dp,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                content = {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(count = 2),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.LightGray)
+                .padding(contentPadding),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp
+            ),
+            verticalItemSpacing = 16.dp,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            content = {
                 item(span = StaggeredGridItemSpan.FullLine) {
                     HeadingContent(notesCount = screenState.notes.size)
                 }
@@ -191,19 +186,18 @@ fun NotesListContent(
                         eventHandler = eventHandler
                     )
                 }
-                    items(
-                        items = screenState.notes,
-                        key = { it.id }
-                    ) {
-                        NoteListItem(
-                            noteDto = it
-                        ) { noteId ->
-                            eventHandler(OnNoteClicked(noteId))
-                        }
+                items(
+                    items = screenState.notes,
+                    key = { it.id }
+                ) {
+                    NoteListItem(
+                        noteDto = it
+                    ) { noteId ->
+                        eventHandler(OnNoteClicked(noteId))
                     }
                 }
-            )
-        }
+            }
+        )
     }
 }
 
@@ -316,7 +310,7 @@ fun TagsListItem(
     onClick: (Long) -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxHeight(),
+        modifier = Modifier.wrapContentSize(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = when (isSelected) {

@@ -2,7 +2,7 @@ package com.bekmnsrw.inotes.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy.REPLACE
+import androidx.room.OnConflictStrategy.Companion.REPLACE
 import androidx.room.Query
 import com.bekmnsrw.inotes.core.database.entity.Note
 import com.bekmnsrw.inotes.feature.notes.domain.dto.CardColor
