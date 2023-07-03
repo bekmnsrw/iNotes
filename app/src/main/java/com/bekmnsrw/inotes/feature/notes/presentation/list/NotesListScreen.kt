@@ -2,12 +2,14 @@ package com.bekmnsrw.inotes.feature.notes.presentation.list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,9 +18,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material3.Card
@@ -29,10 +33,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,13 +59,61 @@ import com.bekmnsrw.inotes.feature.notes.util.formatLastModifiedInNotesList
 import com.bekmnsrw.inotes.ui.custom.CustomTheme
 import com.bekmnsrw.inotes.ui.custom.Theme
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 @Preview(showBackground = true)
 @Composable
 fun NotesListContentPreview() {
     Theme {
         NotesListContent(
-            screenState = NotesListScreenState(),
+            screenState = NotesListScreenState(
+                notes = persistentListOf(
+                    NoteDto(
+                        1,
+                        "title",
+                        "contfwojfweoifjweoifjewent",
+                        false,
+                        123,
+                        CardColor.BASE,
+                        1
+                    ),
+                    NoteDto(
+                        2,
+                        "title",
+                        "contegiojeroigjergiojergoijergioerjgioerjgirgjent",
+                        false,
+                        123,
+                        CardColor.BASE,
+                        1
+                    ),
+                    NoteDto(
+                        3,
+                        "title",
+                        "contenwiufhweiufhweiufhewiufhweiufhiwuefhiuwefhiwehit",
+                        false,
+                        123,
+                        CardColor.BASE,
+                        1
+                    ),
+                    NoteDto(4, "title", "content", false, 123, CardColor.BASE, 1),
+                    NoteDto(5, "title", "copojrwpfwentent", false, 123, CardColor.BASE, 1),
+                    NoteDto(
+                        6,
+                        "title",
+                        "conteriojgeroijgroeigjeroijgoreijgreoijgeroigjerogjerjgient",
+                        false,
+                        123,
+                        CardColor.BASE,
+                        1
+                    )
+                ),
+                tags = persistentListOf(
+                    TagDto(1, "#all"),
+                    TagDto(2, "#home"),
+                    TagDto(3, "#study"),
+                    TagDto(4, "#job")
+                )
+            ),
             eventHandler = {}
         )
     }
@@ -74,7 +129,7 @@ fun NotesListScreen(
 
     NotesListContent(
         screenState = screenState.value,
-        eventHandler = viewModel::eventHandler
+        eventHandler = viewModel::eventHandler,
     )
 
     NotesListActions(
@@ -83,7 +138,7 @@ fun NotesListScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun NotesListContent(
     screenState: NotesListScreenState,
@@ -103,26 +158,51 @@ fun NotesListContent(
             }
         }
     ) { contentPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(CustomTheme.colors.background)
-                .padding(contentPadding)
-        ) {
-            Column {
-                HeadingContent(
-                    notesCount = screenState.notes.size
-                )
-                TagsList(
-                    selectedTagId = screenState.selectedTagId,
-                    tagDtoList = screenState.tags,
-                    eventHandler = eventHandler
-                )
-                NotesList(
-                    noteDtoList = screenState.notes,
-                    eventHandler = eventHandler
-                )
-            }
+        CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Fixed(count = 2),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.LightGray)
+                    .padding(contentPadding),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp
+                ),
+                verticalItemSpacing = 16.dp,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                content = {
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    HeadingContent(notesCount = screenState.notes.size)
+                }
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    TagsList(
+                        selectedTagId = screenState.selectedTagId,
+                        tagDtoList = persistentListOf(
+                            TagDto(1, "#all"),
+                            TagDto(2, "#home"),
+                            TagDto(3, "#study"),
+                            TagDto(4, "#job"),
+                            TagDto(5, "#job"),
+                            TagDto(6, "#job"),
+                            TagDto(7, "#job")
+                        ),
+                        eventHandler = eventHandler
+                    )
+                }
+                    items(
+                        items = screenState.notes,
+                        key = { it.id }
+                    ) {
+                        NoteListItem(
+                            noteDto = it
+                        ) { noteId ->
+                            eventHandler(OnNoteClicked(noteId))
+                        }
+                    }
+                }
+            )
         }
     }
 }
@@ -149,12 +229,7 @@ fun HeadingContent(
     notesCount: Int
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = 16.dp,
-                end = 16.dp
-            )
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = stringResource(id = R.string.title_first_line),
@@ -163,7 +238,8 @@ fun HeadingContent(
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = stringResource(id = R.string.title_second_line),
@@ -183,24 +259,52 @@ fun HeadingContent(
 fun TagsList(
     selectedTagId: Long,
     tagDtoList: PersistentList<TagDto>,
-    eventHandler: (NotesListScreenEvent) -> Unit
+    eventHandler: (NotesListScreenEvent) -> Unit,
 ) {
-    LazyRow(
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        modifier = Modifier.padding(vertical = 16.dp)
+        modifier = Modifier.padding(vertical = 8.dp)
     ) {
-        items(
-            items = tagDtoList,
-            key = { it.id }
+        FolderCard {
+            // ToDo: add event OnFolderClicked - to add new tag
+            eventHandler(OnButtonAddClicked(0))
+        }
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.clip(RoundedCornerShape(16.dp))
         ) {
-            TagsListItem(
-                tagDto = it,
-                isSelected = it.id == selectedTagId
-            ) { tagId ->
-                eventHandler(OnTagClicked(tagId))
+            items(
+                items = tagDtoList,
+                key = { it.id }
+            ) {
+                TagsListItem(
+                    tagDto = it,
+                    isSelected = it.id == selectedTagId
+                ) { tagId ->
+                    eventHandler(OnTagClicked(tagId))
+                }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FolderCard(
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CustomTheme.colors.background),
+        onClick = { onClick() }
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.FolderOpen,
+            contentDescription = null,
+            modifier = Modifier.padding(12.dp),
+            tint = CustomTheme.colors.primary
+        )
     }
 }
 
@@ -212,19 +316,12 @@ fun TagsListItem(
     onClick: (Long) -> Unit
 ) {
     Card(
-        modifier = Modifier.wrapContentSize(),
-        shape = RoundedCornerShape(32.dp),
+        modifier = Modifier.fillMaxHeight(),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = when (isSelected) {
                 true -> CustomTheme.colors.primary
                 false -> CustomTheme.colors.background
-            }
-        ),
-        border = BorderStroke(
-            width = 1.dp,
-            color = when (isSelected) {
-                true -> CustomTheme.colors.primary
-                false -> CustomTheme.colors.onBackground
             }
         ),
         onClick = { onClick(tagDto.id) }
@@ -236,39 +333,9 @@ fun TagsListItem(
                 false -> CustomTheme.colors.onBackground
             },
             style = CustomTheme.typography.tag,
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(10.dp)
         )
     }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun NotesList(
-    noteDtoList: PersistentList<NoteDto>,
-    eventHandler: (NotesListScreenEvent) -> Unit
-) {
-    LazyVerticalStaggeredGrid(
-        columns = StaggeredGridCells.Fixed(count = 2),
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = 16.dp,
-                end = 16.dp
-            ),
-        verticalItemSpacing = 16.dp,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(vertical = 16.dp),
-        content = {
-            items(
-                noteDtoList,
-                key = {it.id}
-            ) {
-                NoteListItem(noteDto = it) { noteId ->
-                    eventHandler(OnNoteClicked(noteId))
-                }
-            }
-        }
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
