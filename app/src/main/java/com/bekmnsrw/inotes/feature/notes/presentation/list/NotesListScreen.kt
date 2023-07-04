@@ -44,7 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekmnsrw.inotes.R
-import com.bekmnsrw.inotes.core.navigation.Screen
+import com.bekmnsrw.inotes.core.navigation.NestedScreen
 import com.bekmnsrw.inotes.feature.notes.domain.dto.CardColor
 import com.bekmnsrw.inotes.feature.notes.domain.dto.NoteDto
 import com.bekmnsrw.inotes.feature.notes.domain.dto.TagDto
@@ -83,11 +83,7 @@ fun NotesListContentPreview() {
                         1
                     )
                 ),
-                tags = persistentListOf(
-                    TagDto(1, "#all"),
-                    TagDto(2, "#home"),
-                    TagDto(3, "#study")
-                )
+                tags = persistentListOf(TagDto(1, "#all"))
             ),
             eventHandler = {}
         )
@@ -153,15 +149,7 @@ fun NotesListContent(
                 item(span = StaggeredGridItemSpan.FullLine) {
                     TagsList(
                         selectedTagId = screenState.selectedTagId,
-                        tagDtoList = persistentListOf(
-                            TagDto(1, "#all"),
-                            TagDto(2, "#home"),
-                            TagDto(3, "#study"),
-                            TagDto(4, "#job"),
-                            TagDto(5, "#job"),
-                            TagDto(6, "#job"),
-                            TagDto(7, "#job")
-                        ),
+                        tagDtoList = screenState.tags,
                         eventHandler = eventHandler
                     )
                 }
@@ -188,11 +176,14 @@ fun NotesListActions(
     LaunchedEffect(screenAction) {
         when (screenAction) {
             null -> Unit
-            is NavigateNoteDetails -> {
-                navController.navigate(
-                    Screen.NoteDetails.createRoute(screenAction.noteId)
-                )
-            }
+
+            is NavigateNoteDetailsScreen -> navController.navigate(
+                NestedScreen.NoteDetails.createRoute(screenAction.noteId)
+            )
+
+            is NavigateTagsScreen -> navController.navigate(
+                NestedScreen.Tags.createRoute(screenAction.tagId)
+            )
         }
     }
 }
@@ -240,8 +231,7 @@ fun TagsList(
         modifier = Modifier.padding(vertical = 8.dp)
     ) {
         FolderCard {
-            // ToDo: add event OnFolderClicked - to add new tag
-            eventHandler(OnButtonAddClicked(0))
+            eventHandler(OnButtonFolderClicked)
         }
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),

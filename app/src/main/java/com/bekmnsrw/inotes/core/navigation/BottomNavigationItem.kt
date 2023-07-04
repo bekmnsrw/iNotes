@@ -6,13 +6,6 @@ import androidx.compose.material.icons.rounded.Note
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
-sealed class Screen(val route: String) {
-
-    object NoteDetails : Screen(route = "{noteId}/details") {
-        fun createRoute(noteId: Long) = "$noteId/details"
-    }
-}
-
 sealed class BottomNavigationItem(
     val route: String,
     val icon: ImageVector

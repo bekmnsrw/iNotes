@@ -9,7 +9,8 @@ import com.bekmnsrw.inotes.feature.notes.domain.usecase.note.GetAllNotesUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.CheckIfTagExistsUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.GetAllTagsUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.SaveTagUseCase
-import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.NavigateNoteDetails
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.*
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -53,10 +54,17 @@ class NotesListViewModel @Inject constructor(
 
     fun eventHandler(event: NotesListScreenEvent) {
         when (event) {
-            is NotesListScreenEvent.OnButtonAddClicked -> navigateNoteDetails(event.noteId)
-            is NotesListScreenEvent.OnNoteClicked -> navigateNoteDetails(event.noteId)
-            is NotesListScreenEvent.OnTagClicked -> onTagClicked(event.tagId)
+            is OnButtonAddClicked -> navigateNoteDetailsScreen(event.noteId)
+            is OnNoteClicked -> navigateNoteDetailsScreen(event.noteId)
+            is OnTagClicked -> onTagClicked(event.tagId)
+            OnButtonFolderClicked -> onButtonFolderClicked()
         }
+    }
+
+    private fun onButtonFolderClicked() = viewModelScope.launch {
+        _screenAction.emit(
+            NavigateTagsScreen(_screenState.value.selectedTagId)
+        )
     }
 
     private fun saveAllTagIfNotExists() = viewModelScope.launch {
@@ -107,11 +115,13 @@ class NotesListViewModel @Inject constructor(
         data class OnNoteClicked(val noteId: Long) : NotesListScreenEvent
         data class OnButtonAddClicked(val noteId: Long) : NotesListScreenEvent
         data class OnTagClicked(val tagId: Long) : NotesListScreenEvent
+        object OnButtonFolderClicked : NotesListScreenEvent
     }
 
     @Immutable
     sealed interface NotesListScreenAction {
-        data class NavigateNoteDetails(val noteId: Long) : NotesListScreenAction
+        data class NavigateNoteDetailsScreen(val noteId: Long) : NotesListScreenAction
+        data class NavigateTagsScreen(val tagId: Long) : NotesListScreenAction
     }
 
     private fun onTagClicked(tagId: Long) = viewModelScope.launch {
@@ -122,9 +132,9 @@ class NotesListViewModel @Inject constructor(
         )
     }
 
-    private fun navigateNoteDetails(noteId: Long) = viewModelScope.launch {
+    private fun navigateNoteDetailsScreen(noteId: Long) = viewModelScope.launch {
         _screenAction.emit(
-            NavigateNoteDetails(noteId)
+            NavigateNoteDetailsScreen(noteId)
         )
     }
 }
