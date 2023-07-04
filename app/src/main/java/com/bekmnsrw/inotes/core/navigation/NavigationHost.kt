@@ -93,7 +93,12 @@ private fun CustomBottomAppBar(
         val navBackStackEntry by navHostController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
 
-        val graphs = listOf(NotesGraph.route, ToDoGraph.route, SettingsGraph.route)
+        val graphs = listOf(
+            NotesGraph.route,
+            ToDoGraph.route,
+            SettingsGraph.route
+        )
+
         val currentGraph = currentDestination?.hierarchy?.firstOrNull { it.parent?.route in graphs }?.parent?.route
 
         bottomNavigationItems.forEach { item ->
