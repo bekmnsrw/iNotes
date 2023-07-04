@@ -66,8 +66,8 @@ fun NotesListContentPreview() {
                 notes = persistentListOf(
                     NoteDto(
                         1,
-                        "title",
-                        "contfwojfweoifjweoifjewent",
+                        "Coffee",
+                        "Prepare hot coffee for friends",
                         false,
                         123,
                         CardColor.BASE,
@@ -75,28 +75,8 @@ fun NotesListContentPreview() {
                     ),
                     NoteDto(
                         2,
-                        "title",
-                        "contegiojeroigjergiojergoijergioerjgioerjgirgjent",
-                        false,
-                        123,
-                        CardColor.BASE,
-                        1
-                    ),
-                    NoteDto(
-                        3,
-                        "title",
-                        "contenwiufhweiufhweiufhewiufhweiufhiwuefhiuwefhiwehit",
-                        false,
-                        123,
-                        CardColor.BASE,
-                        1
-                    ),
-                    NoteDto(4, "title", "content", false, 123, CardColor.BASE, 1),
-                    NoteDto(5, "title", "copojrwpfwentent", false, 123, CardColor.BASE, 1),
-                    NoteDto(
-                        6,
-                        "title",
-                        "conteriojgeroijgroeigjeroijgoreijgreoijgeroigjerogjerjgient",
+                        "Birthday Party Preparations",
+                        "",
                         false,
                         123,
                         CardColor.BASE,
@@ -106,8 +86,7 @@ fun NotesListContentPreview() {
                 tags = persistentListOf(
                     TagDto(1, "#all"),
                     TagDto(2, "#home"),
-                    TagDto(3, "#study"),
-                    TagDto(4, "#job")
+                    TagDto(3, "#study")
                 )
             ),
             eventHandler = {}
