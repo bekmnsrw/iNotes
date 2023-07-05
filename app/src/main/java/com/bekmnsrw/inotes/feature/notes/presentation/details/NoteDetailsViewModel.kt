@@ -10,6 +10,7 @@ import com.bekmnsrw.inotes.feature.notes.domain.usecase.note.GetNoteByIdUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.note.SaveNoteUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.note.UpdateCardColorUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.note.UpdateIsPinnedUseCase
+import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.IncreaseNoteCountUseCase
 import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewModel.NoteDetailsScreenAction.*
 import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewModel.NoteDetailsScreenEvent.*
 import com.bekmnsrw.inotes.feature.notes.util.getCurrentDateTimeInMilliseconds
@@ -28,24 +29,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NoteDetailsViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val saveNoteUseCase: SaveNoteUseCase,
     private val getNoteByIdUseCase: GetNoteByIdUseCase,
     private val updateIsPinnedUseCase: UpdateIsPinnedUseCase,
-    private val updateCardColorUseCase: UpdateCardColorUseCase
+    private val updateCardColorUseCase: UpdateCardColorUseCase,
+    private val increaseNoteCountUseCase: IncreaseNoteCountUseCase
 ) : ViewModel() {
 
     companion object {
         private const val NOTE_ID_KEY = "noteId"
+        private const val TAG_ID_KEY = "tagId"
         private const val DEFAULT_NOTE_ID = 0L
-    }
-
-    init {
-        savedStateHandle.get<String>(NOTE_ID_KEY)?.let {
-            if (it.toLong() != DEFAULT_NOTE_ID) {
-                loadNote(it.toLong())
-            }
-        }
     }
 
     private val _screenState = MutableStateFlow(NoteDetailsScreenState())
@@ -68,14 +63,13 @@ class NoteDetailsViewModel @Inject constructor(
         val isTitleEmpty: Boolean = true,
         val isContentEmpty: Boolean = true,
         val isUserTyping: Boolean = false,
-        val isColorBottomSheetVisible: Boolean = false,
-        val isDropdownMenuVisible: Boolean = false
+        val isColorBottomSheetVisible: Boolean = false
     )
 
     @Immutable
     sealed interface NoteDetailsScreenEvent {
-        data class OnNoteTitleChange(val noteTitle: String) : NoteDetailsScreenEvent
-        data class OnNoteContentChange(val noteContent: String) : NoteDetailsScreenEvent
+        data class OnNoteTitleChanged(val noteTitle: String) : NoteDetailsScreenEvent
+        data class OnNoteContentChanged(val noteContent: String) : NoteDetailsScreenEvent
         object OnEmptyNoteTitle : NoteDetailsScreenEvent
         object OnEmptyNoteContent : NoteDetailsScreenEvent
         object OnNotEmptyNoteTitle : NoteDetailsScreenEvent
@@ -95,8 +89,8 @@ class NoteDetailsViewModel @Inject constructor(
 
     fun eventHandler(event: NoteDetailsScreenEvent) {
         when (event) {
-            is OnNoteContentChange -> onNoteContentChange(event.noteContent)
-            is OnNoteTitleChange -> onNoteTitleChange(event.noteTitle)
+            is OnNoteContentChanged -> onNoteContentChanged(event.noteContent)
+            is OnNoteTitleChanged -> onNoteTitleChanged(event.noteTitle)
             OnEmptyNoteContent -> onEmptyNoteContent()
             OnEmptyNoteTitle -> onEmptyNoteTitle()
             OnNotEmptyNoteContent -> onNotEmptyNoteContent()
@@ -107,6 +101,18 @@ class NoteDetailsViewModel @Inject constructor(
             OnPushPinClicked -> onPushPinClicked()
             is OnColorPaletteClicked -> onColorPaletteClicked(event.isVisible)
             is OnColorCardClicked -> onColorCardClicked(event.cardColor)
+        }
+    }
+
+    init {
+        savedStateHandle.get<String>(NOTE_ID_KEY)?.let {
+            if (it.toLong() != DEFAULT_NOTE_ID) {
+                loadNote(it.toLong())
+            }
+        }
+
+        savedStateHandle.get<String>(TAG_ID_KEY)?.let {
+            updateTagId(it.toLong())
         }
     }
 
@@ -150,6 +156,16 @@ class NoteDetailsViewModel @Inject constructor(
             }
     }
 
+    private fun updateTagId(tagId: Long) = viewModelScope.launch {
+        _screenState.emit(
+            _screenState.value.copy(
+                note = _screenState.value.note.copy(
+                    tagId = tagId
+                )
+            )
+        )
+    }
+
     private fun loadNote(noteId: Long) = viewModelScope.launch {
         getNoteByIdUseCase(noteId)
             .flowOn(Dispatchers.IO)
@@ -189,7 +205,15 @@ class NoteDetailsViewModel @Inject constructor(
         )
     }
 
-    private fun onNoteContentChange(noteContent: String) = viewModelScope.launch {
+    private fun onUserStopTyping() = viewModelScope.launch {
+        _screenState.emit(
+            _screenState.value.copy(
+                isUserTyping = false
+            )
+        )
+    }
+
+    private fun onNoteContentChanged(noteContent: String) = viewModelScope.launch {
         _screenState.emit(
             _screenState.value.copy(
                 note = _screenState.value.note.copy(
@@ -231,7 +255,7 @@ class NoteDetailsViewModel @Inject constructor(
         )
     }
 
-    private fun onNoteTitleChange(noteTitle: String) = viewModelScope.launch {
+    private fun onNoteTitleChanged(noteTitle: String) = viewModelScope.launch {
         _screenState.emit(
             _screenState.value.copy(
                 note = _screenState.value.note.copy(
@@ -241,13 +265,7 @@ class NoteDetailsViewModel @Inject constructor(
         )
     }
 
-    private fun onIconDoneClicked() = viewModelScope.launch {
-        _screenState.emit(
-            _screenState.value.copy(
-                isUserTyping = false
-            )
-        )
-
+    private fun updateLastModified() = viewModelScope.launch {
         _screenState.emit(
             _screenState.value.copy(
                 note = _screenState.value.note.copy(
@@ -255,7 +273,19 @@ class NoteDetailsViewModel @Inject constructor(
                 )
             )
         )
+    }
 
+    private fun increaseNoteCount() = viewModelScope.launch {
+        if (_screenState.value.note.id == DEFAULT_NOTE_ID) {
+            savedStateHandle.get<String>(TAG_ID_KEY)?.let { tagId ->
+                increaseNoteCountUseCase(tagId.toLong())
+                    .flowOn(Dispatchers.IO)
+                    .collect()
+            }
+        }
+    }
+
+    private fun saveNote() = viewModelScope.launch {
         saveNoteUseCase(_screenState.value.note)
             .flowOn(Dispatchers.IO)
             .collect {
@@ -267,5 +297,12 @@ class NoteDetailsViewModel @Inject constructor(
                     )
                 )
             }
+    }
+
+    private fun onIconDoneClicked() = viewModelScope.launch {
+        onUserStopTyping()
+        updateLastModified()
+        saveNote()
+        increaseNoteCount()
     }
 }

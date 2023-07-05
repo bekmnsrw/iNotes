@@ -8,10 +8,13 @@ import com.bekmnsrw.inotes.feature.notes.domain.dto.CardColor
 @Entity(tableName = "note")
 data class Note(
     @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
     val id: Long,
 
+    @ColumnInfo(name = "title")
     val title: String?,
 
+    @ColumnInfo(name = "content")
     val content: String,
 
     @ColumnInfo(name = "last_modified")

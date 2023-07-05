@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,25 +67,41 @@ fun NotesListContentPreview() {
             screenState = NotesListScreenState(
                 notes = persistentListOf(
                     NoteDto(
-                        1,
-                        "Coffee",
-                        "Prepare hot coffee for friends",
-                        false,
-                        123,
-                        CardColor.BASE,
-                        1
+                        id = 1,
+                        title = "Coffee",
+                        content = "Prepare hot coffee for friends",
+                        isPinned = false,
+                        lastModified = 123,
+                        cardColor = CardColor.BASE,
+                        tagId = 1
                     ),
                     NoteDto(
-                        2,
-                        "Birthday Party Preparations",
-                        "",
-                        false,
-                        123,
-                        CardColor.BASE,
-                        1
+                        id = 2,
+                        title = "Birthday Party Preparations",
+                        content = "",
+                        isPinned = false,
+                        lastModified = 123,
+                        cardColor = CardColor.BASE,
+                        tagId = 1
                     )
                 ),
-                tags = persistentListOf(TagDto(1, "#all"))
+                tags = persistentListOf(
+                    TagDto(
+                        id = 1,
+                        name = "All",
+                        noteCount = 10
+                    ),
+                    TagDto(
+                        id = 2,
+                        name = "O",
+                        noteCount = 0
+                    ),
+                    TagDto(
+                        id = 3,
+                        name = "Programming",
+                        noteCount = 1
+                    )
+                )
             ),
             eventHandler = {}
         )
@@ -177,12 +195,22 @@ fun NotesListActions(
         when (screenAction) {
             null -> Unit
 
-            is NavigateNoteDetailsScreen -> navController.navigate(
-                NestedScreen.NoteDetails.createRoute(screenAction.noteId)
+            is NavigateNoteDetailsScreenToCreate -> navController.navigate(
+                NestedScreen.NoteDetails.createRoute(
+                    noteId = screenAction.noteId,
+                    tagId = screenAction.tagId
+                )
             )
 
             is NavigateTagsScreen -> navController.navigate(
                 NestedScreen.Tags.createRoute(screenAction.tagId)
+            )
+
+            is NavigateNoteDetailsScreenToUpdate -> navController.navigate(
+                NestedScreen.NoteDetails.createRoute(
+                    noteId = screenAction.noteId,
+                    tagId = 1L
+                )
             )
         }
     }
@@ -279,7 +307,9 @@ fun TagsListItem(
     onClick: (Long) -> Unit
 ) {
     Card(
-        modifier = Modifier.wrapContentSize(),
+        modifier = Modifier
+            .wrapContentSize()
+            .defaultMinSize(minWidth = 48.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = when (isSelected) {
@@ -296,7 +326,11 @@ fun TagsListItem(
                 false -> CustomTheme.colors.onBackground
             },
             style = CustomTheme.typography.tag,
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier
+                .wrapContentSize()
+                .defaultMinSize(minWidth = 48.dp)
+                .padding(10.dp),
+            textAlign = TextAlign.Center
         )
     }
 }

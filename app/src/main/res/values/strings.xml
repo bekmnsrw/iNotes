@@ -7,8 +7,15 @@
     <string name="pinned_notes">pinned</string>
     <string name="other_notes">other</string>
 
-    <!--  NoteDetails  -->
+    <!--  NoteDetailsScreen  -->
     <string name="note_title">Title</string>
     <string name="note_content">Start typing…</string>
     <string name="card_color_bottom_sheet_title">Choose note color</string>
+
+    <!--  TagsScreen  -->
+    <string name="create_tag_dialog_title">New tag</string>
+    <string name="create_tag_dialog_confirm_button_text">Save</string>
+    <string name="create_tag_dialog_dismiss_button_text">Cancel</string>
+    <string name="create_tag_dialog_text_field_hint">Enter tag\'s name</string>
+    <string name="create_tag_dialog_tag_already_exists_error">Tag already exists</string>
 </resources>

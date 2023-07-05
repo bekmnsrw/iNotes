@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.bekmnsrw.inotes.feature.notes.domain.dto.NoteDto
 import com.bekmnsrw.inotes.feature.notes.domain.dto.TagDto
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.note.GetAllNotesUseCase
-import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.CheckIfTagExistsUseCase
+import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.CheckIfTagExistsByIdUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.GetAllTagsUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.SaveTagUseCase
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.*
@@ -31,13 +31,14 @@ import javax.inject.Inject
 class NotesListViewModel @Inject constructor(
     private val getAllNotesUseCase: GetAllNotesUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
-    private val checkIfTagExistsUseCase: CheckIfTagExistsUseCase,
+    private val checkIfTagExistsByIdUseCase: CheckIfTagExistsByIdUseCase,
     private val saveTagUseCase: SaveTagUseCase
 ) : ViewModel() {
 
     companion object {
-        private const val TAG_ALL_NAME = "#all"
-        private const val TAG_ALL_ID = 1L
+        private const val TAG_ALL_NAME = "All"
+        const val TAG_ALL_ID = 1L
+        const val NOTE_COUNT_INITIAL_VALUE = 0L
     }
 
     init {
@@ -54,8 +55,8 @@ class NotesListViewModel @Inject constructor(
 
     fun eventHandler(event: NotesListScreenEvent) {
         when (event) {
-            is OnButtonAddClicked -> navigateNoteDetailsScreen(event.noteId)
-            is OnNoteClicked -> navigateNoteDetailsScreen(event.noteId)
+            is OnButtonAddClicked -> navigateNoteDetailsScreenToCreate(event.noteId)
+            is OnNoteClicked -> navigateNoteDetailsScreenToUpdate(event.noteId)
             is OnTagClicked -> onTagClicked(event.tagId)
             OnButtonFolderClicked -> onButtonFolderClicked()
         }
@@ -68,11 +69,17 @@ class NotesListViewModel @Inject constructor(
     }
 
     private fun saveAllTagIfNotExists() = viewModelScope.launch {
-        checkIfTagExistsUseCase(TAG_ALL_ID)
+        checkIfTagExistsByIdUseCase(TAG_ALL_ID)
             .flowOn(Dispatchers.IO)
             .collect {
                 if (!it) {
-                    saveTagUseCase(TagDto(TAG_ALL_ID, TAG_ALL_NAME))
+                    saveTagUseCase(
+                        TagDto(
+                            TAG_ALL_ID,
+                            TAG_ALL_NAME,
+                            NOTE_COUNT_INITIAL_VALUE
+                        )
+                    )
                         .flowOn(Dispatchers.IO)
                         .collect()
                 }
@@ -120,7 +127,8 @@ class NotesListViewModel @Inject constructor(
 
     @Immutable
     sealed interface NotesListScreenAction {
-        data class NavigateNoteDetailsScreen(val noteId: Long) : NotesListScreenAction
+        data class NavigateNoteDetailsScreenToCreate(val noteId: Long, val tagId: Long) : NotesListScreenAction
+        data class NavigateNoteDetailsScreenToUpdate(val noteId: Long) : NotesListScreenAction
         data class NavigateTagsScreen(val tagId: Long) : NotesListScreenAction
     }
 
@@ -132,9 +140,18 @@ class NotesListViewModel @Inject constructor(
         )
     }
 
-    private fun navigateNoteDetailsScreen(noteId: Long) = viewModelScope.launch {
+    private fun navigateNoteDetailsScreenToUpdate(noteId: Long) = viewModelScope.launch {
         _screenAction.emit(
-            NavigateNoteDetailsScreen(noteId)
+            NavigateNoteDetailsScreenToUpdate(noteId)
+        )
+    }
+
+    private fun navigateNoteDetailsScreenToCreate(noteId: Long) = viewModelScope.launch {
+        _screenAction.emit(
+            NavigateNoteDetailsScreenToCreate(
+                noteId,
+                _screenState.value.selectedTagId
+            )
         )
     }
 }

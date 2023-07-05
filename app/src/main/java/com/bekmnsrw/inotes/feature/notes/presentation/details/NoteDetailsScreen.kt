@@ -1,6 +1,5 @@
 package com.bekmnsrw.inotes.feature.notes.presentation.details
 
-import android.view.Gravity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,10 +26,8 @@ import androidx.compose.material.icons.rounded.Done
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,13 +43,9 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.DialogWindowProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -80,7 +73,7 @@ fun NoteDetailsContentPreview() {
         NoteDetailsContent(
             screenState = NoteDetailsScreenState(),
             eventHandler = {},
-            bottomSheetScaffoldState = rememberModalBottomSheetState(
+            modalBottomSheetState = rememberModalBottomSheetState(
                 initialValue = ModalBottomSheetValue.Expanded
             ),
             coroutineScope = rememberCoroutineScope()
@@ -97,7 +90,7 @@ fun NoteDetailsScreen(
     val screenState = viewModel.screenState.collectAsStateWithLifecycle()
     val screenAction by viewModel.screenAction.collectAsStateWithLifecycle(initialValue = null)
 
-    val bottomSheetScaffoldState = rememberModalBottomSheetState(
+    val modalBottomSheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden
     )
 
@@ -106,7 +99,7 @@ fun NoteDetailsScreen(
     NoteDetailsContent(
         screenState = screenState.value,
         eventHandler = viewModel::eventHandler,
-        bottomSheetScaffoldState = bottomSheetScaffoldState,
+        modalBottomSheetState = modalBottomSheetState,
         coroutineScope = coroutineScope
     )
 
@@ -121,14 +114,14 @@ fun NoteDetailsScreen(
 fun NoteDetailsContent(
     screenState: NoteDetailsScreenState,
     eventHandler: (NoteDetailsScreenEvent) -> Unit,
-    bottomSheetScaffoldState: ModalBottomSheetState,
+    modalBottomSheetState: ModalBottomSheetState,
     coroutineScope: CoroutineScope
 ) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
     ModalBottomSheetLayout(
-        sheetState = bottomSheetScaffoldState,
+        sheetState = modalBottomSheetState,
         sheetContent = {
             BottomSheetWithColors(
                 selectedCardColor = screenState.note.cardColor,
@@ -151,7 +144,7 @@ fun NoteDetailsContent(
                 isNotePinned = screenState.note.isPinned,
                 isColorBottomSheetVisible = screenState.isColorBottomSheetVisible,
                 coroutineScope = coroutineScope,
-                modalBottomSheetState = bottomSheetScaffoldState,
+                modalBottomSheetState = modalBottomSheetState,
                 eventHandler = eventHandler,
                 focusManager = focusManager
             )
@@ -265,7 +258,7 @@ fun NoteHeader(
             BasicTextField(
                 value = title,
                 onValueChange = { value ->
-                    eventHandler(OnNoteTitleChange(noteTitle = value))
+                    eventHandler(OnNoteTitleChanged(noteTitle = value))
                 },
                 textStyle = CustomTheme.typography.noteTitle,
                 modifier = Modifier
@@ -314,7 +307,7 @@ fun NoteContent(
     ) {
         BasicTextField(
             value = note.content,
-            onValueChange = { eventHandler(OnNoteContentChange(noteContent = it)) },
+            onValueChange = { eventHandler(OnNoteContentChanged(noteContent = it)) },
             textStyle = CustomTheme.typography.noteContent,
             modifier = Modifier
                 .fillMaxSize()

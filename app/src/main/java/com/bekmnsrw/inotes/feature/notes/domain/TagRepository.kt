@@ -8,5 +8,8 @@ interface TagRepository {
     suspend fun getAll(): Flow<List<TagDto>>
     suspend fun getById(id: Long): Flow<TagDto?>
     suspend fun save(tagDto: TagDto): Flow<Unit>
-    suspend fun isTagExists(id: Long): Flow<Boolean>
+    suspend fun checkIfTagAlreadyExistsById(id: Long): Flow<Boolean>
+    suspend fun increaseNoteCount(id: Long): Flow<Unit>
+    suspend fun decreaseNoteCount(id: Long): Flow<Unit>
+    suspend fun checkIfTagAlreadyExistsByName(tagName: String): Flow<Boolean>
 }

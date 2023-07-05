@@ -10,7 +10,10 @@ import com.bekmnsrw.inotes.core.database.entity.Note
 import com.bekmnsrw.inotes.core.database.entity.Tag
 
 @Database(
-    entities = [Note::class, Tag::class],
+    entities = [
+        Note::class,
+        Tag::class
+    ],
     version = 1
 )
 @TypeConverters(CardColorConverter::class)
