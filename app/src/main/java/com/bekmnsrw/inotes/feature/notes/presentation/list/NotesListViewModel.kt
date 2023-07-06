@@ -6,11 +6,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekmnsrw.inotes.feature.notes.domain.dto.NoteDto
 import com.bekmnsrw.inotes.feature.notes.domain.dto.TagDto
+import com.bekmnsrw.inotes.feature.notes.domain.usecase.note.GetAllNotesByTagIdUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.note.GetAllNotesUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.CheckIfTagExistsByIdUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.GetAllTagsUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.SaveTagUseCase
-import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.*
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.NavigateNoteDetailsScreenToCreate
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.NavigateNoteDetailsScreenToUpdate
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.NavigateTagsScreen
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.ScrollTagListToSelectedItem
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.OnButtonAddClicked
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.OnButtonFolderClicked
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.OnNoteClicked
@@ -20,7 +24,6 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -38,6 +41,7 @@ class NotesListViewModel @Inject constructor(
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val checkIfTagExistsByIdUseCase: CheckIfTagExistsByIdUseCase,
     private val saveTagUseCase: SaveTagUseCase,
+    private val getAllNotesByTagIdUseCase: GetAllNotesByTagIdUseCase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -102,21 +106,14 @@ class NotesListViewModel @Inject constructor(
                 )
             )
 
-            println("from handle $selectedTagId")
-
             val index = _screenState.value.tags.indexOfFirst {
                 it.id == selectedTagId.toLong()
             }
 
-            println(_screenState.value.tags.toString())
-
-            println(index)
-
-
+            _screenAction.emit(
+                ScrollTagListToSelectedItem(index)
+            )
         }
-        _screenAction.emit(
-            ScrollTagListToSelectedItem(7)
-        )
     }
 
     private fun onButtonFolderClicked() = viewModelScope.launch {
@@ -156,15 +153,29 @@ class NotesListViewModel @Inject constructor(
     }
 
     private fun loadNotes() = viewModelScope.launch {
-        getAllNotesUseCase()
-            .flowOn(Dispatchers.IO)
-            .collect {
-                _screenState.emit(
-                    screenState.value.copy(
-                        notes = it.toPersistentList()
+        val selectedTagId = savedStateHandle.get<String>(SELECTED_TAG_ID_KEY)
+
+        if (selectedTagId == null) {
+            getAllNotesUseCase()
+                .flowOn(Dispatchers.IO)
+                .collect {
+                    _screenState.emit(
+                        screenState.value.copy(
+                            notes = it.toPersistentList()
+                        )
                     )
-                )
-            }
+                }
+        } else {
+            getAllNotesByTagIdUseCase(selectedTagId.toLong())
+                .flowOn(Dispatchers.IO)
+                .collect {
+                    _screenState.emit(
+                        _screenState.value.copy(
+                            notes = it.toPersistentList()
+                        )
+                    )
+                }
+        }
     }
 
     private fun onTagClicked(tagId: Long) = viewModelScope.launch {
@@ -173,6 +184,16 @@ class NotesListViewModel @Inject constructor(
                 selectedTagId = tagId
             )
         )
+
+        getAllNotesByTagIdUseCase(tagId)
+            .flowOn(Dispatchers.IO)
+            .collect {
+                _screenState.emit(
+                    _screenState.value.copy(
+                        notes = it.toPersistentList()
+                    )
+                )
+            }
     }
 
     private fun navigateNoteDetailsScreenToUpdate(noteId: Long) = viewModelScope.launch {

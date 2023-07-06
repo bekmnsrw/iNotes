@@ -62,4 +62,10 @@ class NoteRepositoryImpl @Inject constructor(
                 )
         )
     }
+
+    override suspend fun findAllByTagId(tagId: Long): Flow<List<NoteDto>> {
+        return appDatabase.noteDao()
+            .findAllByTagId(tagId)
+            .map { it.toNoteDtoList() }
+    }
 }

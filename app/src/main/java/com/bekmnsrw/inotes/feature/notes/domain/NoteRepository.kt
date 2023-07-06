@@ -11,4 +11,5 @@ interface NoteRepository {
     suspend fun findById(id: Long): Flow<NoteDto>
     suspend fun updateIsPinned(id: Long, isPinned: Boolean): Flow<Boolean>
     suspend fun updateCardColor(id: Long, cardColor: CardColor): Flow<Unit>
+    suspend fun findAllByTagId(tagId: Long): Flow<List<NoteDto>>
 }

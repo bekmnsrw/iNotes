@@ -28,4 +28,7 @@ interface NoteDao {
 
     @Query("SELECT * FROM note ORDER BY is_pinned DESC, last_modified DESC")
     fun findAll(): Flow<List<Note>>
+
+    @Query("SELECT * FROM note WHERE tag_id = :tagId ORDER BY is_pinned DESC, last_modified DESC")
+    fun findAllByTagId(tagId: Long): Flow<List<Note>>
 }
