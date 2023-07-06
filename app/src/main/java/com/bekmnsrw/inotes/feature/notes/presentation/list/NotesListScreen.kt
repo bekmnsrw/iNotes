@@ -1,5 +1,6 @@
 package com.bekmnsrw.inotes.feature.notes.presentation.list
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -202,15 +203,15 @@ fun NotesListActions(
                 )
             )
 
-            is NavigateTagsScreen -> navController.navigate(
-                NestedScreen.Tags.createRoute(screenAction.tagId)
-            )
-
             is NavigateNoteDetailsScreenToUpdate -> navController.navigate(
                 NestedScreen.NoteDetails.createRoute(
                     noteId = screenAction.noteId,
                     tagId = 1L
                 )
+            )
+
+            is NavigateTagsScreen -> navController.navigate(
+                NestedScreen.Tags.createRoute(screenAction.tagId)
             )
         }
     }
@@ -288,7 +289,7 @@ private fun FolderCard(
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CustomTheme.colors.background),
-        onClick = { onClick() }
+        onClick = onClick
     ) {
         Icon(
             imageVector = Icons.Outlined.FolderOpen,
@@ -358,9 +359,9 @@ fun NoteListItem(
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            if (!noteDto.title.isNullOrBlank()) {
+            AnimatedVisibility(visible = noteDto.title?.isNotBlank() == true) {
                 Text(
-                    text = noteDto.title,
+                    text = noteDto.title!!,
                     color = CustomTheme.colors.onBackground,
                     style = CustomTheme.typography.cardTitle,
                     modifier = Modifier.fillMaxWidth(),
@@ -368,7 +369,7 @@ fun NoteListItem(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            if (noteDto.content.isNotBlank()) {
+            AnimatedVisibility(visible = noteDto.content.isNotBlank()) {
                 Text(
                     text = noteDto.content,
                     color = CustomTheme.colors.onBackground,
@@ -411,7 +412,7 @@ fun NoteListItem(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (noteDto.isPinned) {
+                    AnimatedVisibility(visible = noteDto.isPinned) {
                         Icon(
                             imageVector = Icons.Rounded.PushPin,
                             contentDescription = null,

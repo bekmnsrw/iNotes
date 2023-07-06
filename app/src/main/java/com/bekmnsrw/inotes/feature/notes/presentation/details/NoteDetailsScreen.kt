@@ -1,5 +1,6 @@
 package com.bekmnsrw.inotes.feature.notes.presentation.details
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -118,7 +119,6 @@ fun NoteDetailsContent(
     coroutineScope: CoroutineScope
 ) {
     val focusRequester = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
 
     ModalBottomSheetLayout(
         sheetState = modalBottomSheetState,
@@ -145,8 +145,7 @@ fun NoteDetailsContent(
                 isColorBottomSheetVisible = screenState.isColorBottomSheetVisible,
                 coroutineScope = coroutineScope,
                 modalBottomSheetState = modalBottomSheetState,
-                eventHandler = eventHandler,
-                focusManager = focusManager
+                eventHandler = eventHandler
             )
 
             NoteHeader(
@@ -173,9 +172,9 @@ fun TopBar(
     isColorBottomSheetVisible: Boolean,
     coroutineScope: CoroutineScope,
     modalBottomSheetState: ModalBottomSheetState,
-    eventHandler: (NoteDetailsScreenEvent) -> Unit,
-    focusManager: FocusManager
+    eventHandler: (NoteDetailsScreenEvent) -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     Row(
@@ -192,9 +191,9 @@ fun TopBar(
                     imageVector = Icons.Rounded.Done,
                     horizontalPadding = 0
                 ) {
-                    eventHandler(OnIconDoneClicked)
                     keyboardController?.hide()
                     focusManager.clearFocus()
+                    eventHandler(OnIconDoneClicked)
                 }
             }
 
@@ -284,7 +283,7 @@ fun NoteHeader(
                 }
             )
         }
-        if (note.lastModified != 0L) {
+        AnimatedVisibility(visible = note.lastModified != 0L) {
             Text(
                 text = formatLastModifiedInNoteDetails(note.lastModified),
                 color = CustomTheme.colors.outline,
@@ -415,6 +414,7 @@ fun NoteDetailsActions(
     LaunchedEffect(screenAction) {
         when (screenAction) {
             null -> Unit
+
             NavigateBack -> navController.navigateUp()
         }
     }

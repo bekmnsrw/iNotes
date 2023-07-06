@@ -1,5 +1,6 @@
 package com.bekmnsrw.inotes.feature.notes.presentation.tag
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,16 +33,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -63,12 +62,12 @@ fun TagsContentPreview() {
                 tags = persistentListOf(
                     TagDto(
                         id = 1,
-                        name = "#all",
+                        name = "All",
                         noteCount = 10
                     ),
                     TagDto(
                         id = 2,
-                        name = "#home",
+                        name = "Home",
                         noteCount = 0
                     )
                 )
@@ -169,10 +168,8 @@ fun CreateTagDialog(
 ) {
     val focusRequester = remember { FocusRequester() }
 
-    if (shouldShow) {
-        Dialog(
-            onDismissRequest = onDismiss
-        ) {
+    AnimatedVisibility(visible = shouldShow) {
+        Dialog(onDismissRequest = onDismiss) {
             Card(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -207,7 +204,7 @@ fun CreateTagDialog(
                             )
                         },
                         supportingText = {
-                            if (isTagAlreadyExists) {
+                            AnimatedVisibility(visible = isTagAlreadyExists) {
                                 Text(
                                     text = stringResource(id = R.string.create_tag_dialog_tag_already_exists_error),
                                     color = MaterialTheme.colorScheme.error
