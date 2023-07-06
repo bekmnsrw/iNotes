@@ -12,9 +12,11 @@ sealed class BottomNavigationItem(
 ) {
 
     object NotesList : BottomNavigationItem(
-        route = "notes-list",
+        route = "notes-list/{selectedTagId}",
         icon = Icons.Rounded.Note
-    )
+    ) {
+        fun createRoute(tagId: Long) = "notes-list/$tagId"
+    }
 
     object ToDoList : BottomNavigationItem(
         route = "todo-list",

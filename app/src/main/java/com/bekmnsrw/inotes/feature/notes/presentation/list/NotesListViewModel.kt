@@ -1,6 +1,7 @@
 package com.bekmnsrw.inotes.feature.notes.presentation.list
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekmnsrw.inotes.feature.notes.domain.dto.NoteDto
@@ -10,12 +11,16 @@ import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.CheckIfTagExistsById
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.GetAllTagsUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.SaveTagUseCase
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenAction.*
-import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.*
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.OnButtonAddClicked
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.OnButtonFolderClicked
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.OnNoteClicked
+import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel.NotesListScreenEvent.OnTagClicked
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -32,19 +37,39 @@ class NotesListViewModel @Inject constructor(
     private val getAllNotesUseCase: GetAllNotesUseCase,
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val checkIfTagExistsByIdUseCase: CheckIfTagExistsByIdUseCase,
-    private val saveTagUseCase: SaveTagUseCase
+    private val saveTagUseCase: SaveTagUseCase,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     companion object {
         private const val TAG_ALL_NAME = "All"
-        const val TAG_ALL_ID = 1L
+        private const val TAG_ALL_ID = 1L
+        private const val SELECTED_TAG_ID_KEY = "selectedTagId"
+
         const val NOTE_COUNT_INITIAL_VALUE = 0L
     }
 
-    init {
-        saveAllTagIfNotExists()
-        loadNotes()
-        loadTags()
+    @Immutable
+    data class NotesListScreenState(
+        val selectedTagId: Long = 1,
+        val notes: PersistentList<NoteDto> = persistentListOf(),
+        val tags: PersistentList<TagDto> = persistentListOf()
+    )
+
+    @Immutable
+    sealed interface NotesListScreenEvent {
+        data class OnNoteClicked(val noteId: Long) : NotesListScreenEvent
+        data class OnButtonAddClicked(val noteId: Long) : NotesListScreenEvent
+        data class OnTagClicked(val tagId: Long) : NotesListScreenEvent
+        object OnButtonFolderClicked : NotesListScreenEvent
+    }
+
+    @Immutable
+    sealed interface NotesListScreenAction {
+        data class NavigateNoteDetailsScreenToCreate(val noteId: Long, val tagId: Long) : NotesListScreenAction
+        data class NavigateNoteDetailsScreenToUpdate(val noteId: Long) : NotesListScreenAction
+        data class NavigateTagsScreen(val tagId: Long) : NotesListScreenAction
+        data class ScrollTagListToSelectedItem(val index: Int) : NotesListScreenAction
     }
 
     private val _screenState = MutableStateFlow(NotesListScreenState())
@@ -60,6 +85,38 @@ class NotesListViewModel @Inject constructor(
             is OnTagClicked -> onTagClicked(event.tagId)
             OnButtonFolderClicked -> onButtonFolderClicked()
         }
+    }
+
+    init {
+        loadNotes()
+        loadTags()
+        saveAllTagIfNotExists()
+        updateSelectedTagId()
+    }
+
+    private fun updateSelectedTagId() = viewModelScope.launch {
+        savedStateHandle.get<String>(SELECTED_TAG_ID_KEY)?.let { selectedTagId ->
+            _screenState.emit(
+                _screenState.value.copy(
+                    selectedTagId = selectedTagId.toLong()
+                )
+            )
+
+            println("from handle $selectedTagId")
+
+            val index = _screenState.value.tags.indexOfFirst {
+                it.id == selectedTagId.toLong()
+            }
+
+            println(_screenState.value.tags.toString())
+
+            println(index)
+
+
+        }
+        _screenAction.emit(
+            ScrollTagListToSelectedItem(7)
+        )
     }
 
     private fun onButtonFolderClicked() = viewModelScope.launch {
@@ -108,28 +165,6 @@ class NotesListViewModel @Inject constructor(
                     )
                 )
             }
-    }
-
-    @Immutable
-    data class NotesListScreenState(
-        val selectedTagId: Long = 1,
-        val notes: PersistentList<NoteDto> = persistentListOf(),
-        val tags: PersistentList<TagDto> = persistentListOf()
-    )
-
-    @Immutable
-    sealed interface NotesListScreenEvent {
-        data class OnNoteClicked(val noteId: Long) : NotesListScreenEvent
-        data class OnButtonAddClicked(val noteId: Long) : NotesListScreenEvent
-        data class OnTagClicked(val tagId: Long) : NotesListScreenEvent
-        object OnButtonFolderClicked : NotesListScreenEvent
-    }
-
-    @Immutable
-    sealed interface NotesListScreenAction {
-        data class NavigateNoteDetailsScreenToCreate(val noteId: Long, val tagId: Long) : NotesListScreenAction
-        data class NavigateNoteDetailsScreenToUpdate(val noteId: Long) : NotesListScreenAction
-        data class NavigateTagsScreen(val tagId: Long) : NotesListScreenAction
     }
 
     private fun onTagClicked(tagId: Long) = viewModelScope.launch {

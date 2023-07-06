@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
@@ -59,6 +61,9 @@ import com.bekmnsrw.inotes.ui.custom.CustomTheme
 import com.bekmnsrw.inotes.ui.custom.Theme
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Preview(showBackground = true)
 @Composable
@@ -112,10 +117,12 @@ fun NotesListContentPreview() {
 @Composable
 fun NotesListScreen(
     navController: NavController,
-    viewModel: NotesListViewModel = hiltViewModel()
+    viewModel: NotesListViewModel = hiltViewModel(),
 ) {
     val screenState = viewModel.screenState.collectAsStateWithLifecycle()
     val screenAction by viewModel.screenAction.collectAsStateWithLifecycle(initialValue = null)
+
+    val listState = rememberLazyListState()
 
     NotesListContent(
         screenState = screenState.value,
@@ -124,7 +131,8 @@ fun NotesListScreen(
 
     NotesListActions(
         screenAction = screenAction,
-        navController = navController
+        navController = navController,
+        listState = listState
     )
 }
 
@@ -190,7 +198,8 @@ fun NotesListContent(
 @Composable
 fun NotesListActions(
     screenAction: NotesListScreenAction?,
-    navController: NavController
+    navController: NavController,
+    listState: LazyListState
 ) {
     LaunchedEffect(screenAction) {
         when (screenAction) {
@@ -211,8 +220,20 @@ fun NotesListActions(
             )
 
             is NavigateTagsScreen -> navController.navigate(
-                NestedScreen.Tags.createRoute(screenAction.tagId)
+                NestedScreen.Tags.createRoute(
+                    selectedTagId = screenAction.tagId
+                )
             )
+
+            is ScrollTagListToSelectedItem -> {
+                println(screenAction.index)
+                CoroutineScope(Dispatchers.Main).launch {
+                    listState.animateScrollToItem(screenAction.index)
+                }
+//                listState.animateScrollToItem(
+//                    index = screenAction.index
+//                )
+            }
         }
     }
 }
@@ -225,7 +246,7 @@ fun HeadingContent(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = stringResource(id = R.string.title_first_line),
+            text = stringResource(id = R.string.notes_list_screen_title_first_line),
             color = CustomTheme.colors.onBackground,
             style = CustomTheme.typography.screenHeading
         )
@@ -235,7 +256,7 @@ fun HeadingContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(id = R.string.title_second_line),
+                text = stringResource(id = R.string.notes_list_screen_title_second_line),
                 color = CustomTheme.colors.onBackground,
                 style = CustomTheme.typography.screenHeading
             )

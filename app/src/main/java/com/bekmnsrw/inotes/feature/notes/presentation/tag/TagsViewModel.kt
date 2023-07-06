@@ -1,20 +1,16 @@
 package com.bekmnsrw.inotes.feature.notes.presentation.tag
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekmnsrw.inotes.feature.notes.domain.dto.TagDto
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.CheckIfTagAlreadyExistsByNameUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.GetAllTagsUseCase
 import com.bekmnsrw.inotes.feature.notes.domain.usecase.tag.SaveTagUseCase
-import com.bekmnsrw.inotes.feature.notes.presentation.details.NoteDetailsViewModel
 import com.bekmnsrw.inotes.feature.notes.presentation.list.NotesListViewModel
-import com.bekmnsrw.inotes.feature.notes.presentation.tag.TagsViewModel.TagsScreenEvent.OnButtonAddClicked
-import com.bekmnsrw.inotes.feature.notes.presentation.tag.TagsViewModel.TagsScreenEvent.OnButtonSaveTagClicked
-import com.bekmnsrw.inotes.feature.notes.presentation.tag.TagsViewModel.TagsScreenEvent.OnCreateTagDialogDismiss
-import com.bekmnsrw.inotes.feature.notes.presentation.tag.TagsViewModel.TagsScreenEvent.OnTagClicked
-import com.bekmnsrw.inotes.feature.notes.presentation.tag.TagsViewModel.TagsScreenEvent.OnTagNameChanged
-import com.bekmnsrw.inotes.feature.notes.presentation.tag.TagsViewModel.TagsScreenEvent.OnTagPressed
+import com.bekmnsrw.inotes.feature.notes.presentation.tag.TagsViewModel.TagsScreenAction.*
+import com.bekmnsrw.inotes.feature.notes.presentation.tag.TagsViewModel.TagsScreenEvent.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -40,12 +36,15 @@ import javax.inject.Inject
 class TagsViewModel @Inject constructor(
     private val getAllTagsUseCase: GetAllTagsUseCase,
     private val checkIfTagAlreadyExistsByNameUseCase: CheckIfTagAlreadyExistsByNameUseCase,
-    private val saveTagUseCase: SaveTagUseCase
+    private val saveTagUseCase: SaveTagUseCase,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     companion object {
         private const val TIMEOUT_MILLIS = 500L
         private const val STOP_TIMEOUT_MILLIS = 5000L
+
+        private const val SELECTED_TAG_ID_KEY = "selectedTagId"
     }
 
     @Immutable
@@ -58,6 +57,7 @@ class TagsViewModel @Inject constructor(
     @Immutable
     sealed interface TagsScreenEvent {
         data class OnTagClicked(val id: Long) : TagsScreenEvent
+        object OnArrowBackClicked : TagsScreenEvent
         object OnButtonAddClicked : TagsScreenEvent
         data class OnTagPressed(val id: Long) : TagsScreenEvent
         object OnCreateTagDialogDismiss : TagsScreenEvent
@@ -67,7 +67,8 @@ class TagsViewModel @Inject constructor(
 
     @Immutable
     sealed interface TagsScreenAction {
-        data class NavigateNoteListScreen(val id: Long) : TagsScreenAction
+        data class NavigateNoteListScreen(val selectedTagId: Long) : TagsScreenAction
+        object NavigateBack : TagsScreenAction
     }
 
     private val _screenState = MutableStateFlow(TagsScreenState())
@@ -82,16 +83,38 @@ class TagsViewModel @Inject constructor(
     fun eventHandler(event: TagsScreenEvent) {
         when (event) {
             OnButtonAddClicked -> onButtonAddClicked()
-            is OnTagClicked -> TODO()
+            is OnTagClicked -> onTagClicked(event.id)
             is OnTagPressed -> TODO()
-            is OnButtonSaveTagClicked -> onButtonSaveTagClicked()
+            OnButtonSaveTagClicked -> onButtonSaveTagClicked()
             OnCreateTagDialogDismiss -> onCreateTagDialogDismiss()
             is OnTagNameChanged -> onTagNameChanged(event.tagName)
+            OnArrowBackClicked -> onArrowBackClicked()
         }
     }
 
     init {
         getAllTags()
+        getSelectedTagId()
+    }
+
+    private fun onTagClicked(tagId: Long) = viewModelScope.launch {
+        _screenAction.emit(
+            NavigateNoteListScreen(tagId)
+        )
+    }
+
+    private fun onArrowBackClicked() = viewModelScope.launch {
+        _screenAction.emit(NavigateBack)
+    }
+
+    private fun getSelectedTagId() = viewModelScope.launch {
+        savedStateHandle.get<String>(SELECTED_TAG_ID_KEY)?.let {
+            _screenState.emit(
+                _screenState.value.copy(
+                    selectedTagId = it.toLong()
+                )
+            )
+        }
     }
 
     private val _isTagAlreadyExists = MutableStateFlow(false)

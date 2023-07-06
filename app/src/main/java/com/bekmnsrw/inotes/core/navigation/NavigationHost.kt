@@ -55,11 +55,7 @@ fun NavigationHost(
                 startDestination = NotesGraph.startDestination,
                 route = NotesGraph.route
             ) {
-                composable(route = NotesList.route) {
-                    NotesListScreen(
-                        navController = navHostController
-                    )
-                }
+                composable(route = NotesList.route) { NotesListScreen(navController = navHostController) }
                 composable(route = NestedScreen.NoteDetails.route) { NoteDetailsScreen(navController = navHostController) }
                 composable(route = NestedScreen.Tags.route) { TagsScreen(navController = navHostController) }
             }

@@ -2,14 +2,12 @@
     <string name="app_name">iNotes</string>
 
     <!--  NotesListScreen  -->
-    <string name="title_first_line">my</string>
-    <string name="title_second_line">notes</string>
-    <string name="pinned_notes">pinned</string>
-    <string name="other_notes">other</string>
+    <string name="notes_list_screen_title_first_line">my</string>
+    <string name="notes_list_screen_title_second_line">notes</string>
 
     <!--  NoteDetailsScreen  -->
-    <string name="note_title">Title</string>
-    <string name="note_content">Start typing…</string>
+    <string name="note_title_hint">Title</string>
+    <string name="note_content_hint">Start typing…</string>
     <string name="card_color_bottom_sheet_title">Choose note color</string>
 
     <!--  TagsScreen  -->
@@ -18,4 +16,5 @@
     <string name="create_tag_dialog_dismiss_button_text">Cancel</string>
     <string name="create_tag_dialog_text_field_hint">Enter tag\'s name</string>
     <string name="create_tag_dialog_tag_already_exists_error">Tag already exists</string>
+    <string name="tags_screen_title">Tags</string>
 </resources>

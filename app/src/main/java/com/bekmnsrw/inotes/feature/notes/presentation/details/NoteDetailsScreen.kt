@@ -37,7 +37,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -272,7 +271,7 @@ fun NoteHeader(
                     if (note.title.isEmpty()) {
                         eventHandler(OnEmptyNoteTitle)
                         Text(
-                            text = stringResource(id = R.string.note_title),
+                            text = stringResource(id = R.string.note_title_hint),
                             color = CustomTheme.colors.outline,
                             style = CustomTheme.typography.noteTitle
                         )
@@ -320,7 +319,7 @@ fun NoteContent(
                 if (note.content.isEmpty()) {
                     eventHandler(OnEmptyNoteContent)
                     Text(
-                        text = stringResource(id = R.string.note_content),
+                        text = stringResource(id = R.string.note_content_hint),
                         color = CustomTheme.colors.outline,
                         style = CustomTheme.typography.noteContent
                     )
