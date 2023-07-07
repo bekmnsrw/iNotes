@@ -84,7 +84,7 @@ class TagsViewModel @Inject constructor(
         when (event) {
             OnButtonAddClicked -> onButtonAddClicked()
             is OnTagClicked -> onTagClicked(event.id)
-            is OnTagPressed -> TODO()
+            is OnTagPressed -> onTagPressed(event.id)
             OnButtonSaveTagClicked -> onButtonSaveTagClicked()
             OnCreateTagDialogDismiss -> onCreateTagDialogDismiss()
             is OnTagNameChanged -> onTagNameChanged(event.tagName)
@@ -95,6 +95,14 @@ class TagsViewModel @Inject constructor(
     init {
         getAllTags()
         getSelectedTagId()
+    }
+
+    private fun onTagPressed(selectedTagId: Long) = viewModelScope.launch {
+        _screenState.emit(
+            _screenState.value.copy(
+                selectedTagId = selectedTagId
+            )
+        )
     }
 
     private fun onTagClicked(tagId: Long) = viewModelScope.launch {

@@ -1,8 +1,10 @@
 package com.bekmnsrw.inotes.feature.notes.presentation.tag
 
+import android.nfc.Tag
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,15 +14,32 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetLayout
+import androidx.compose.material.ModalBottomSheetState
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Done
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.Pin
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.EditAttributes
+import androidx.compose.material.icons.rounded.EditNote
+import androidx.compose.material.icons.rounded.PushPin
+import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -41,10 +60,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -63,7 +85,10 @@ import com.bekmnsrw.inotes.feature.notes.presentation.tag.TagsViewModel.TagsScre
 import com.bekmnsrw.inotes.ui.custom.CustomTheme
 import com.bekmnsrw.inotes.ui.custom.Theme
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Preview(showBackground = true)
 @Composable
 fun TagsContentPreview() {
@@ -86,11 +111,19 @@ fun TagsContentPreview() {
             ),
             tagName = "",
             isTagAlreadyExists = false,
-            eventHandler = {}
+            eventHandler = {},
+            scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+                rememberTopAppBarState()
+            ),
+            modalBottomSheetState = rememberModalBottomSheetState(
+                initialValue = ModalBottomSheetValue.Hidden
+            ),
+            coroutineScope = rememberCoroutineScope()
         )
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun TagsScreen(
     navController: NavController,
@@ -102,11 +135,23 @@ fun TagsScreen(
     val tagName by viewModel.tagNameInput.collectAsStateWithLifecycle()
     val isTagAlreadyExists by viewModel.isTagAlreadyExists.collectAsStateWithLifecycle()
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        rememberTopAppBarState()
+    )
+    val modalBottomSheetState = rememberModalBottomSheetState(
+        initialValue = ModalBottomSheetValue.Hidden
+    )
+
+    val coroutineScope = rememberCoroutineScope()
+
     TagsContent(
         screenState = screenState.value,
         tagName = tagName,
         isTagAlreadyExists = isTagAlreadyExists,
-        eventHandler = viewModel::eventHandler
+        eventHandler = viewModel::eventHandler,
+        scrollBehavior = scrollBehavior,
+        modalBottomSheetState = modalBottomSheetState,
+        coroutineScope = coroutineScope
     )
 
     TagsActions(
@@ -115,55 +160,86 @@ fun TagsScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun TagsContent(
     screenState: TagsScreenState,
     tagName: String,
     isTagAlreadyExists: Boolean,
-    eventHandler: (TagsScreenEvent) -> Unit
+    eventHandler: (TagsScreenEvent) -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+    modalBottomSheetState: ModalBottomSheetState,
+    coroutineScope: CoroutineScope
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
-        rememberTopAppBarState()
-    )
-
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TagsScreenTopBar(
-                scrollBehavior = scrollBehavior,
+    ModalBottomSheetLayout(
+        sheetState = modalBottomSheetState,
+        sheetContent = {
+            BottomSheetWithTagActions(
                 eventHandler = eventHandler
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { eventHandler(OnButtonAddClicked) }) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = null
+        sheetShape = RoundedCornerShape(
+            topStart = 8.dp,
+            topEnd = 8.dp
+        )
+    ) {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                TagsScreenTopBar(
+                    scrollBehavior = scrollBehavior,
+                    eventHandler = eventHandler
                 )
+            },
+            floatingActionButton = {
+                FloatingActionButton(onClick = { eventHandler(OnButtonAddClicked) }) {
+                    Icon(
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = null
+                    )
+                }
             }
-        }
-    ) { contentPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(CustomTheme.colors.background)
-                .padding(contentPadding),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            items(
-                items = screenState.tags,
-                key = { it.id }
+        ) { contentPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(CustomTheme.colors.background)
+                    .padding(contentPadding),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                contentPadding = PaddingValues(16.dp)
             ) {
-                TagsListItem(
-                    tagDto = it,
-                    isSelected = it.id == screenState.selectedTagId,
-                    notesCount = it.noteCount,
-                    onClick = { eventHandler(OnTagClicked(it.id)) },
-                    onPress = { eventHandler(OnTagClicked(it.id)) }
-                )
+                items(
+                    items = screenState.tags,
+                    key = { it.id }
+                ) {
+                    TagsListItem(
+                        tagDto = it,
+                        isSelected = it.id == screenState.selectedTagId,
+                        notesCount = it.noteCount,
+                        onClick = {
+                            eventHandler(
+                                OnTagClicked(
+                                    id = it.id
+                                )
+                            )
+                        },
+                        onPress = {
+                            eventHandler(
+                                OnTagPressed(
+                                    id = it.id
+                                )
+                            )
+                            coroutineScope.launch {
+                                if (modalBottomSheetState.isVisible) {
+                                    modalBottomSheetState.hide()
+                                } else {
+                                    modalBottomSheetState.show()
+                                }
+                            }
+                        }
+                    )
+                }
             }
         }
     }
@@ -175,6 +251,66 @@ fun TagsContent(
         onDismiss = { eventHandler(OnCreateTagDialogDismiss) },
         eventHandler = eventHandler
     )
+}
+
+@Composable
+fun BottomSheetWithTagActions(
+    eventHandler: (TagsScreenEvent) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .background(CustomTheme.colors.background)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TagActionItem(
+            imageVector = Icons.Outlined.PushPin,
+            caption = "Pin"
+        ) {
+
+        }
+        TagActionItem(
+            imageVector = Icons.Outlined.Delete,
+            caption = "Delete"
+        ) {
+
+        }
+        TagActionItem(
+            imageVector = Icons.Rounded.Edit,
+            caption = "Edit"
+        ) {
+
+        }
+    }
+}
+
+@Composable
+private fun TagActionItem(
+    imageVector: ImageVector,
+    caption: String,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .width(50.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = imageVector,
+            contentDescription = null,
+            tint = CustomTheme.colors.onBackground
+        )
+        Text(
+            text = caption,
+            color = CustomTheme.colors.onBackground,
+            style = CustomTheme.typography.cardDate
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -202,7 +338,7 @@ fun TagsScreenTopBar(
         }
     },
     navigationIcon = {
-        IconButton(onClick = {eventHandler(OnArrowBackClicked)}) {
+        IconButton(onClick = { eventHandler(OnArrowBackClicked) }) {
             Icon(
                 imageVector = Icons.Rounded.ArrowBack,
                 contentDescription = null
@@ -336,7 +472,7 @@ fun TagsListItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                AnimatedVisibility(visible = isSelected) {
+                if (isSelected) {
                     Icon(
                         imageVector = Icons.Outlined.Done,
                         contentDescription = null,
